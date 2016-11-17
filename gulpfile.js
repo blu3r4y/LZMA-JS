@@ -2,6 +2,7 @@
 const gulp = require("gulp")
 const rename = require("gulp-rename")
 const replace = require("gulp-replace")
+const sourcemaps = require("gulp-sourcemaps")
 const uglify = require("gulp-uglify")
 
 const merge = require("merge-stream")
@@ -37,8 +38,10 @@ function compileLZMA(minify, define) {
 
 function buildLZMA(minify) {
   return gulp.src("./src/lzma.js")
-    .pipe(compileLZMA(minify))
-    .pipe(rename({ suffix: minify && ".min" }))
+    .pipe(sourcemaps.init())
+      .pipe(compileLZMA(minify))
+      .pipe(rename({ suffix: minify && ".min" }))
+    .pipe(sourcemaps.write("."))
     .pipe(gulp.dest(destdir))
 }
 
@@ -48,8 +51,10 @@ function buildLZMAWorker(minify) {
     stream.add(
       gulp.src("./src/lzma_worker.js")
         .pipe(replace(/.*remove before uglify.*/g, ''))
-        .pipe(compileLZMA(minify, targets[name]))
-        .pipe(rename({ basename: name, suffix: minify && ".min" }))
+        .pipe(sourcemaps.init())
+          .pipe(compileLZMA(minify, targets[name]))
+          .pipe(rename({ basename: name, suffix: minify && ".min" }))
+        .pipe(sourcemaps.write("."))
         .pipe(gulp.dest(destdir))
     )
   }
