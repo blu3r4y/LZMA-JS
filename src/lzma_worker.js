@@ -20,6 +20,8 @@ var LZMA = (function () {
     
     "use strict";
     
+    var COMPRESS = true, DECOMPRESS = true; // remove before uglify
+
     var /** cs */
         action_compress   = 1,
         /** ce */

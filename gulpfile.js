@@ -1,6 +1,7 @@
 "use strict"
 const gulp = require("gulp")
 const rename = require("gulp-rename")
+const replace = require("gulp-replace")
 const uglify = require("gulp-uglify")
 
 const merge = require("merge-stream")
@@ -46,6 +47,7 @@ function buildLZMAWorker(minify) {
   for (let name in targets) {
     stream.add(
       gulp.src("./src/lzma_worker.js")
+        .pipe(replace(/.*remove before uglify.*/g, ''))
         .pipe(compileLZMA(minify, targets[name]))
         .pipe(rename({ basename: name, suffix: minify && ".min" }))
         .pipe(gulp.dest(destdir))
