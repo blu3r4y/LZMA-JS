@@ -11,14 +11,27 @@ const targets = {
   "lzma-d": {},
 }
 
-var destdir = "./dist"
+const destdir = "./dist"
+
+function compileLZMA() {
+  return uglify({
+    mangle: true,
+    compress: {
+      unsafe: true,
+      unsafe_comps: true,
+      pure_getters: true,
+      passes: 2,
+      warnings: false,
+    },
+    output: {
+      comments: /©/,
+    },
+  })
+}
 
 function buildLZMA() {
   return gulp.src("./src/lzma.js")
-    .pipe(uglify({
-      mangle: true,
-      compress: true,
-    }))
+    .pipe(compileLZMA())
     .pipe(rename({ suffix: ".min" }))
     .pipe(gulp.dest(destdir))
 }
@@ -28,10 +41,7 @@ function buildLZMAWorker() {
   for (let name in targets) {
     stream.add(
       gulp.src("./src/" + name + ".js")
-        .pipe(uglify({
-          mangle: true,
-          compress: true,
-        }))
+        .pipe(compileLZMA())
         .pipe(rename({ suffix: ".min" }))
         .pipe(gulp.dest(destdir))
     )
