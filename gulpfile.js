@@ -13,10 +13,10 @@ const targets = {
 
 const destdir = "./dist"
 
-function compileLZMA() {
+function compileLZMA(minify) {
   return uglify({
-    mangle: true,
-    mangleProperties: {
+    mangle: minify,
+    mangleProperties: minify && {
       regex: /^(?!LZMA|(de)?compress|worker|document)/
     },
     compress: {
@@ -27,32 +27,35 @@ function compileLZMA() {
       warnings: false,
     },
     output: {
-      comments: /©/,
+      beautify: !minify,
+      comments: minify ? /©/ : "all",
     },
   })
 }
 
-function buildLZMA() {
+function buildLZMA(minify) {
   return gulp.src("./src/lzma.js")
-    .pipe(compileLZMA())
-    .pipe(rename({ suffix: ".min" }))
+    .pipe(compileLZMA(minify))
+    .pipe(rename({ suffix: minify && ".min" }))
     .pipe(gulp.dest(destdir))
 }
 
-function buildLZMAWorker() {
+function buildLZMAWorker(minify) {
   let stream = merge()
   for (let name in targets) {
     stream.add(
       gulp.src("./src/" + name + ".js")
-        .pipe(compileLZMA())
-        .pipe(rename({ suffix: ".min" }))
+        .pipe(compileLZMA(minify))
+        .pipe(rename({ suffix: minify && ".min" }))
         .pipe(gulp.dest(destdir))
     )
   }
   return stream
 }
 
-gulp.task("dist:lzma:min", buildLZMA)
-gulp.task("dist:lzma_worker:min", buildLZMAWorker)
-gulp.task("dist", ["dist:lzma:min", "dist:lzma_worker:min"])
+gulp.task("dist:lzma", buildLZMA.bind(null, false))
+gulp.task("dist:lzma:min", buildLZMA.bind(null, true))
+gulp.task("dist:lzma_worker", buildLZMAWorker.bind(null, false))
+gulp.task("dist:lzma_worker:min", buildLZMAWorker.bind(null, true))
+gulp.task("dist", ["dist:lzma", "dist:lzma:min", "dist:lzma_worker", "dist:lzma_worker:min"])
 gulp.task("default", ["dist"])
