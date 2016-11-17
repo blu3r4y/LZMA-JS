@@ -16,6 +16,9 @@ const destdir = "./dist"
 function compileLZMA() {
   return uglify({
     mangle: true,
+    mangleProperties: {
+      regex: /^(?!LZMA|(de)?compress|worker|document)/
+    },
     compress: {
       unsafe: true,
       unsafe_comps: true,
