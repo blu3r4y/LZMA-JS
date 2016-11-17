@@ -36,34 +36,43 @@ function compileLZMA(minify, define) {
   })
 }
 
-function buildLZMA(minify) {
-  return gulp.src("./src/lzma.js")
+gulp.task("dist:lzma", () =>
+  gulp.src("./src/lzma.js").pipe(gulp.dest(destdir))
+)
+
+gulp.task("dist:lzma:min", () => {
+  gulp.src("./src/lzma.js")
     .pipe(sourcemaps.init())
-      .pipe(compileLZMA(minify))
-      .pipe(rename({ suffix: minify && ".min" }))
+      .pipe(compileLZMA(true))
+      .pipe(rename({ suffix: ".min" }))
     .pipe(sourcemaps.write("."))
     .pipe(gulp.dest(destdir))
-}
+})
 
 function buildLZMAWorker(minify) {
   let stream = merge()
   for (let name in targets) {
-    stream.add(
-      gulp.src("./src/lzma_worker.js")
-        .pipe(replace(/.*remove before uglify.*/g, ''))
-        .pipe(sourcemaps.init())
-          .pipe(compileLZMA(minify, targets[name]))
-          .pipe(rename({ basename: name, suffix: minify && ".min" }))
-        .pipe(sourcemaps.write("."))
-        .pipe(gulp.dest(destdir))
-    )
+    if (!minify && name === "lzma_worker") {
+      stream.add(
+        gulp.src("./src/lzma_worker.js").pipe(gulp.dest(destdir))
+      )
+    } else {
+      stream.add(
+        gulp.src("./src/lzma_worker.js")
+          .pipe(replace(/.*remove before uglify.*/g, ''))
+          .pipe(sourcemaps.init())
+            .pipe(compileLZMA(minify, targets[name]))
+            .pipe(rename({ basename: name, suffix: minify && ".min" }))
+          .pipe(sourcemaps.write("."))
+          .pipe(gulp.dest(destdir))
+      )
+    }
   }
   return stream
 }
 
-gulp.task("dist:lzma", buildLZMA.bind(null, false))
-gulp.task("dist:lzma:min", buildLZMA.bind(null, true))
 gulp.task("dist:lzma_worker", buildLZMAWorker.bind(null, false))
 gulp.task("dist:lzma_worker:min", buildLZMAWorker.bind(null, true))
+
 gulp.task("dist", ["dist:lzma", "dist:lzma:min", "dist:lzma_worker", "dist:lzma_worker:min"])
 gulp.task("default", ["dist"])
