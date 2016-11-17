@@ -6,14 +6,14 @@ const uglify = require("gulp-uglify")
 const merge = require("merge-stream")
 
 const targets = {
-  "lzma_worker": {},
-  "lzma-c": {},
-  "lzma-d": {},
+  "lzma_worker": { COMPRESS: true,  DECOMPRESS: true  },
+  "lzma-c":      { COMPRESS: true,  DECOMPRESS: false },
+  "lzma-d":      { COMPRESS: false, DECOMPRESS: true  },
 }
 
 const destdir = "./dist"
 
-function compileLZMA(minify) {
+function compileLZMA(minify, define) {
   return uglify({
     mangle: minify,
     mangleProperties: minify && {
@@ -25,6 +25,7 @@ function compileLZMA(minify) {
       pure_getters: true,
       passes: 2,
       warnings: false,
+      global_defs: define,
     },
     output: {
       beautify: !minify,
@@ -44,9 +45,9 @@ function buildLZMAWorker(minify) {
   let stream = merge()
   for (let name in targets) {
     stream.add(
-      gulp.src("./src/" + name + ".js")
-        .pipe(compileLZMA(minify))
-        .pipe(rename({ suffix: minify && ".min" }))
+      gulp.src("./src/lzma_worker.js")
+        .pipe(compileLZMA(minify, targets[name]))
+        .pipe(rename({ basename: name, suffix: minify && ".min" }))
         .pipe(gulp.dest(destdir))
     )
   }

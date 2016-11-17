@@ -438,7 +438,7 @@ var LZMA = (function () {
         this$static._streamPos -= subValue;
     }
     
-    var CrcTable = (function () {
+    var CrcTable = COMPRESS && (function () {
         var i, j, r, CrcTable = [];
         for (i = 0; i < 256; ++i) {
             r = i;
@@ -818,11 +818,13 @@ var LZMA = (function () {
         if (this$static.encoder) {
             /// do:throw new Error("No encoding");
             /** cs */
+            if (!COMPRESS) throw new Error("No encoding");
             $processEncoderChunk(this$static);
             /** ce */
         } else {
             /// co:throw new Error("No decoding");
             /** ds */
+            if (!DECOMPRESS) throw new Error("No decoding");
             $processDecoderChunk(this$static);
             /** de */
         }
@@ -1130,7 +1132,7 @@ var LZMA = (function () {
     
     /** de */
     /** cs */
-    var g_FastPos = (function () {
+    var g_FastPos = COMPRESS && (function () {
         var j, k, slotFast, c = 2, g_FastPos = [0, 1];
         for (slotFast = 2; slotFast < 22; ++slotFast) {
             k = 1 << (slotFast >> 1) - 1;
@@ -2271,7 +2273,7 @@ var LZMA = (function () {
         }
     }
     /** cs */
-    var ProbPrices = (function () {
+    var ProbPrices = COMPRESS && (function () {
         var end, i, j, start, ProbPrices = [];
         for (i = 8; i >= 0; --i) {
             start = 1 << 9 - i - 1;
@@ -2602,7 +2604,7 @@ var LZMA = (function () {
     }
     /** de */
     /** cs */
-    var get_mode_obj = (function () {
+    var get_mode_obj = COMPRESS && (function() {
         /// s is dictionarySize
         /// f is fb
         /// m is matchFinder
@@ -2637,9 +2639,9 @@ var LZMA = (function () {
             onmessage = function (e) {
                 if (e && e.data) {
                     /** xs */
-                    if (e.data.action == action_decompress) {
+                    if (DECOMPRESS && e.data.action == action_decompress) {
                         LZMA.decompress(e.data.data, e.data.cbn);
-                    } else if (e.data.action == action_compress) {
+                    } else if (COMPRESS && e.data.action == action_compress) {
                         LZMA.compress(e.data.data, e.data.mode, e.data.cbn);
                     }
                     /** xe */
@@ -2653,15 +2655,16 @@ var LZMA = (function () {
             };
         }());
     }
-        
-    return {
+    return (COMPRESS && DECOMPRESS) ? {
         /** xs */
         compress:   compress,
         decompress: decompress,
         /** xe */
         /// co:compress:   compress
         /// do:decompress: decompress
-    };
+    } : COMPRESS   ? { compress:   compress   }
+      : DECOMPRESS ? { decompress: decompress }
+      : {};
 }());
 
 /// This is used by browsers that do not support web workers (and possibly Node.js).
